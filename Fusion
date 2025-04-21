@@ -1,0 +1,210 @@
+// FusionController
+
+using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using TechFusion.Models;
+
+public class FusionController : Controller
+{
+    private readonly FusionDBContext _context;
+
+    public FusionController(FusionDBContext context)
+    {
+        _context = context;
+    }
+
+    // GET: ApplicantLogin
+    public IActionResult ApplicantLogin()
+    {
+        return View();
+    }
+
+    // POST: ApplicantLogin
+    [HttpPost]
+    public IActionResult ApplicantLogin(FusionLogin login)
+    {
+        if (ModelState.IsValid)
+        {
+            var applicant = _context.Applicants.FirstOrDefault(a => a.Email == login.Email && a.Password == login.Password);
+            if (applicant != null)
+            {
+                return RedirectToAction("Success");
+            }
+            ModelState.AddModelError("", "Invalid login attempt.");
+        }
+        return View(login);
+    }
+
+    // GET: AddApplicant
+    public IActionResult AddApplicant()
+    {
+        return View();
+    }
+
+    // POST: AddApplicant
+    [HttpPost]
+    public IActionResult AddApplicant(Applicant applicant)
+    {
+        if (ModelState.IsValid)
+        {
+            _context.Applicants.Add(applicant);
+            _context.SaveChanges();
+            return RedirectToAction("Success");
+        }
+        return View(applicant);
+    }
+
+    // GET: Success
+    public IActionResult Success()
+    {
+        return View();
+    }
+}
+
+
+// FusionLogin.cs
+
+using System.ComponentModel.DataAnnotations;
+
+namespace TechFusion.Models
+{
+    public class FusionLogin
+    {
+        [Required(ErrorMessage = "Please enter the email")]
+        public string Email { get; set; }
+
+        [Required(ErrorMessage = "Please enter the password")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+    }
+}
+
+
+// Applicant.cs
+
+
+
+using System.ComponentModel.DataAnnotations;
+
+namespace TechFusion.Models
+{
+    public class Applicant
+    {
+        [Key]
+
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Please enter the applicant name")]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "Please enter the password")]
+
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+
+        [Required(ErrorMessage = "Please re-enter the password")]
+        [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "Passwords do not match")]
+        public string ConfirmPassword { get; set; }
+
+        [Required(ErrorMessage = "Please enter the email")]
+        [DataType(DataType.EmailAddress)]
+        public string Email { get; set; }
+
+        [Required(ErrorMessage = "Please enter the contact details")]
+        public long Contact { get; set; }
+
+    }
+}
+
+// FusionDBContext
+
+using Microsoft.EntityFrameworkCore;
+
+namespace TechFusion.Models
+{
+    public class FusionDBContext : DbContext
+    {
+
+        public DbSet<Applicant> Applicants { get; set; }
+
+        public FusionDBContext(DbContextOptions<FusionDBContext> options) : base(options)
+        {
+        }
+
+    }
+}
+
+
+// AddApplicant.cshtml
+
+@model Applicant
+
+<form asp-action="AddApplicant" method="post">
+
+    <div class="form-group">
+        <h2>Add Applicant</h2>
+    </div>
+    <div class="form-group">
+        <label asp-for="Name" class="control-label">Name</label>
+        <input asp-for="Name" class="form-control"/>
+        <span asp-validation-for="Name"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Email" class="control-label">Email</label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email"></span>
+    </div>
+
+     <div class="form-group">
+        <label asp-for="Password" class="control-label">Password</label>
+        <input asp-for="Password" class="form-control" />
+         <span asp-validation-for="Password"></span>
+     </div>
+
+    <div class="form-group">
+        <label asp-for="ConfirmPassword" class="control-label">Confirm Password</label>
+        <input asp-for="ConfirmPassword" class="form-control" />
+        <span asp-validation-for="ConfirmPassword"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Contact" class="control-label">Contact</label>
+        <input asp-for="Contact" class="form-control" />
+        <span asp-validation-for="Contact"></span>
+    </div>
+
+    <div class="form-group">
+        <button type="submit" id="btnCreate" class="btn btn-primary">Create</button>
+    </div>
+    
+</form>
+
+
+
+// ApplicantLogin.cshtml
+
+@model FusionLogin
+
+<form asp-action="ApplicantLogin" method="post">
+    <div class="form-group">
+        <label asp-for="Email" class="control-label">Email</label>
+        <input asp-for="Email" class="form-control"/>
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Password" class="control-label">Password</label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <button type="submit" id="btnSubmit" class="btn btn-primary">Submit</button>
+        <a asp-action="AddApplicant" id="lnkRegister" class="btn btn-link">Register</a>
+    </div>
+    
+</form>
+
+
+Success.cshtml
+
+/ incomplete 
+<h1 id="Message">Registration Successful Completed for</h1>
