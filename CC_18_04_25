@@ -1,0 +1,238 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace CC_18_04_25.Models
+{
+    public class Freshman
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required(ErrorMessage = "Please enter your registration number")]
+        public string RegistrationNumber { get; set; }
+        [Required(ErrorMessage = "Please enter your name")]
+        public string Name { get; set; }
+        [Required(ErrorMessage = "Please enter your password")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+        [Required(ErrorMessage = "Please re-enter your password")]
+        [DataType(DataType.Password)]
+        [Compare("Password")]
+        public string ConfirmPassword { get; set; }
+        [Required(ErrorMessage = "Please enter your age")]
+        public int Age { get; set; }
+        [Required(ErrorMessage = "Please enter your mobile number")]
+        public long MobileNumber { get; set; }
+    }
+}
+
+
+using System.ComponentModel.DataAnnotations;
+
+namespace CC_18_04_25.Models
+{
+    public class PioneerLogin
+    {
+
+        [Required(ErrorMessage = "Please enter your registration number")]
+        public string RegistrationNumber { get; set; }
+        [Required(ErrorMessage = "Please enter your password")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+    }
+}
+
+
+using Microsoft.EntityFrameworkCore;
+
+namespace CC_18_04_25.Models
+{
+    public class PioneerDBContext : DbContext
+    {
+        public PioneerDBContext(DbContextOptions<PioneerDBContext> options) : base(options)
+        {
+
+        }
+
+        // Implement code here
+        public DbSet<Freshman> Freshmen { get; set; }
+        
+    }
+}
+
+
+using CC_18_04_25.Models;
+using Microsoft.AspNetCore.Mvc;
+
+namespace CC_18_04_25.Controllers
+{
+    public class PioneerController : Controller
+    {
+        private readonly PioneerDBContext _dbContext;
+        public PioneerController(PioneerDBContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+        [HttpGet]
+        public IActionResult PioneerPortal()
+        {
+            return View();
+        }
+        [HttpPost]
+        public IActionResult PioneerPortal(PioneerLogin login)
+        {
+            if (ModelState.IsValid)
+            {
+                var a = _dbContext.Freshmen.FirstOrDefault(f=>f.RegistrationNumber == login.RegistrationNumber && f.Password == login.Password);
+                if (a != null)
+                {
+                    return RedirectToAction("Dashboard");
+                }
+                TempData["Str"] = login.RegistrationNumber;
+                
+            }
+            return View();
+        }
+        
+        [HttpGet]
+        public IActionResult InsertFreshman()
+        {
+            return View();
+        }
+        [HttpPost]
+        public IActionResult InsertFreshman(Freshman freshman)
+        {
+            if (ModelState.IsValid)
+            {
+
+                if (freshman.RegistrationNumber == freshman.Password)
+                {
+                    
+                ViewBag.Message = "RegistrationNumber and Password should not be the same";
+                return View(freshman);
+
+                }
+
+                _dbContext.Add(freshman);
+                _dbContext.SaveChanges();
+                return RedirectToAction("PioneerPortal");
+            }
+            return View();
+        }
+   
+        public IActionResult Dashboard(PioneerLogin model)
+        {
+            string registrationnumber = TempData["str"] as string;
+            ViewBag.Message = $"Your Registration number - {registrationnumber} is successfully inserted to PIONEER UNIVERSITY";
+
+            return View();
+        }
+
+    }
+}
+
+//InsertFreshman.cshtml
+@model CC_18_04_25.Models.Freshman
+
+@{
+    ViewData["Title"] = "InsertFreshman";
+}
+
+<h1>InsertFreshman</h1>
+
+
+<h4>Freshman</h4>
+<hr />
+<div class="row">
+    <h4>@ViewBag.Message</h4>
+    <div class="col-md-4">
+        <form asp-action="InsertFreshman">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="RegistrationNumber" class="control-label"></label>
+                <input asp-for="RegistrationNumber" class="form-control" />
+                <span asp-validation-for="RegistrationNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Password" class="control-label"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfirmPassword" class="control-label"></label>
+                <input asp-for="ConfirmPassword" class="form-control" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Age" class="control-label"></label>
+                <input asp-for="Age" class="form-control" />
+                <span asp-validation-for="Age" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MobileNumber" class="control-label"></label>
+                <input asp-for="MobileNumber" class="form-control" />
+                <span asp-validation-for="MobileNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+//PioneerPortal.cshtml
+@model CC_18_04_25.Models.PioneerLogin
+
+@{
+    ViewData["Title"] = "PioneerPortal";
+}
+
+<h1>PioneerPortal</h1>
+
+<h4>PioneerLogin</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="PioneerPortal">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="RegistrationNumber" class="control-label"></label>
+                <input asp-for="RegistrationNumber" class="form-control" />
+                <span asp-validation-for="RegistrationNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Password" class="control-label"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Login" class="btn btn-primary" />
+            </div>
+            <div>
+                <a asp-controller="Pioneer" asp-action="InsertFreshman">Register</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+//Dashboard.cshtml
+
+
+<h2>@ViewBag.Message</h2>
+<div>
+    <a asp-controller="Pioneer" asp-action="PioneerPortal">Back to Login page</a>
+</div>
